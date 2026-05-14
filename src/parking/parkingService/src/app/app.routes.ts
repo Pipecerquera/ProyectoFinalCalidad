@@ -1,4 +1,3 @@
-import { PaypalComponent } from './page/pasarela/paypal/paypal.component';
 import { Routes } from '@angular/router';
 import { HomeComponent } from './page/home/home.component';
 import { LoginComponent } from './auth/login/login.component';
@@ -11,6 +10,7 @@ import { VehiculosComponent as AdminVehiculos } from './page/admin/vehiculos/veh
 import { PersonaListComponent } from './page/admin/persona-list/persona-list.component';
 import { ParkingComponent } from './page/user/parking/parking-details.component';
 import { SpacesComponent } from './page/admin/spaces/spaces.component';
+import { FacturacionComponent } from './auth/facturacion/facturacion.component';
 
 
 export const routes: Routes = [
@@ -28,12 +28,13 @@ export const routes: Routes = [
       { path: 'admin/reservalist', component: ReservaListComponent },
       { path: 'admin/personalist', component: PersonaListComponent },
       { path: 'admin/spaces', component: SpacesComponent },
+      { path: 'admin/facturacion', component: FacturacionComponent },
       // parking general
       { path: 'parking', component: ParkingComponent},
       { path: 'comments', component: CommentsComponent },
       { path: '**', redirectTo: 'parking', pathMatch: 'full' },
       // pasarela de compras
-      {path: 'paypal', component: PaypalComponent}
+      
     ]
   },
   { path: 'auth', component: LoginComponent },

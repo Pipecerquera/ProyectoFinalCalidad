@@ -4,19 +4,9 @@
     <p class="text-center">Reserva tu espacio de estacionamiento de manera fácil y rápida</p>
 </div>
 
-<div class="map-container">
-    <h3 class="map-title text-center" style="color: #911590;">Ubicación de Estacionamiento</h3>
-    <div id="map" style="width: 100%; height: 200px;">
-        <iframe width="80%" height="200" frameborder="0" style="border:0; margin: 0 10%;"
-            src="https://www.google.com/maps/embed/v1/place?key=AIzaSyDWmh4H4O1AqdP5-nzLJft-EdFo9m6TDk8&q=34.397,-150.644"
-            allowfullscreen></iframe>
-    </div>
-</div>
-
 <div class="parking-supercontainer">
     <h2 class="text-center" style="color: #911590; font-size: 32px;">Mapa de reservas</h2>
     <div class="parking-container">
-        <!-- Sección para carros -->
         <div id="street1">Calle 1</div>
         <div class="parking-section carros">
             <h4>Carros</h4>
@@ -27,11 +17,9 @@
                     {{ espacio.relativeName }}
                 </div>
             </div>
-
         </div>
 
         <div id="street2">Calle 2</div>
-        <!-- Sección para buses -->
         <div class="parking-section buses">
             <h4>Buses</h4>
             <div class="parking-grid">
@@ -44,7 +32,6 @@
         </div>
 
         <div id="street3">Calle 3</div>
-        <!-- Sección para motos -->
         <div class="parking-section motos">
             <h4>Motos</h4>
             <div class="parking-grid">
@@ -61,28 +48,42 @@
 <!-- Modal de reserva -->
 <div *ngIf="mostrarModal" class="modal-overlay">
     <div class="modal-content">
-        <h2 class="text-center" style="color: #911590;">Reservar Espacio: {{ espacioSeleccionado?.relativeName }}</h2>
+        <h2 class="text-center" style="color: #911590;">
+            Reservar Espacio: {{ espacioSeleccionado?.relativeName }}
+        </h2>
         <form (submit)="reservarEspacio()">
+
             <div class="mb-3">
                 <label for="vehiculo" class="form-label">Vehículo</label>
-                <select id="vehiculo" [(ngModel)]="vehiculoSeleccionado" name="vehiculo" class="form-select" required>
-                    <option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.id">{{ vehiculo.placa }}</option>
+                <select id="vehiculo" [(ngModel)]="vehiculoSeleccionado" name="vehiculo"
+                    class="form-select" required>
+                    <option *ngFor="let vehiculo of vehiculos" [value]="vehiculo.id">
+                        {{ vehiculo.placa }}
+                    </option>
                 </select>
             </div>
+
             <div class="mb-3">
-                <label for="fechaReserva" class="form-label">Fecha de Reserva</label>
-                <input type="date" id="fechaReserva" [(ngModel)]="fechaReserva" name="fechaReserva" class="form-control"
-                    required>
+                <label for="fechaReserva" class="form-label">Fecha y hora de entrada</label>
+                <!-- ← datetime-local permite seleccionar fecha Y hora -->
+                <input type="datetime-local" id="fechaReserva"
+                    [(ngModel)]="fechaReserva" name="fechaReserva"
+                    class="form-control" required>
             </div>
+
             <div class="mb-3">
-                <label for="fechaSalida" class="form-label">Fecha de Salida</label>
-                <input type="date" id="fechaSalida" [(ngModel)]="fechaSalida" name="fechaSalida" class="form-control"
-                    required>
+                <label for="fechaSalida" class="form-label">Fecha y hora de salida</label>
+                <!-- ← datetime-local permite seleccionar fecha Y hora -->
+                <input type="datetime-local" id="fechaSalida"
+                    [(ngModel)]="fechaSalida" name="fechaSalida"
+                    class="form-control" required>
             </div>
+
             <div class="d-flex justify-content-between">
                 <button type="submit" class="btn btn-success">Reservar</button>
                 <button type="button" class="btn btn-secondary" (click)="cerrarModal()">Cancelar</button>
             </div>
+
         </form>
     </div>
 </div>

@@ -2,6 +2,7 @@ package com.AuthNode.auth.web.Controller;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.AuthNode.auth.Dto.LoginDto;
 import com.AuthNode.auth.Entity.PersonaEntity;
@@ -38,7 +40,6 @@ public class PersonaController {
 
     @Autowired
     private IPersonaService personaService;
-    
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -70,7 +71,6 @@ public class PersonaController {
     
     @PostMapping("/auth")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginDto loginDto) throws Exception {
-        Logger logger = LoggerFactory.getLogger(PersonaController.class);
         logger.info("Attempting to authenticate user with email: " + loginDto.getEmail());
 
         Optional<PersonaEntity> userOptional = personaService.findByCorreo(loginDto.getEmail());
@@ -87,9 +87,9 @@ public class PersonaController {
                 String jwt = this.jwtUtil.create(loginDto.getEmail());
 
                 Map<String, Object> response = new HashMap<>();
-                response.put("message", "scs"); // secure conexion stableshied
+                response.put("message", "scs");
                 response.put("id", user.getId());
-                response.put("rol", user.getRole());
+                response.put("role", user.getRole());
                 response.put("nombre", user.getFullname());
                 response.put("estado", user.getStatus());
                 response.put("nofiticaciones", user.getNotifications());
@@ -101,40 +101,105 @@ public class PersonaController {
                 logger.info("Contraseña no coincide para el usuario: " + user.getEmail());
             }
         } else {
-        	logger.info("Usuario no encontrado en el usuario: " + loginDto.getEmail());
+            logger.info("Usuario no encontrado: " + loginDto.getEmail());
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not found");
     }
+
+    @GetMapping("/verify")
+public ResponseEntity<?> verifyEmail(@RequestParam("token") String token) {
+    String resultado = personaService.verifyEmail(token);
+ 
+    return switch (resultado) {
+        case "VERIFICADO_OK" -> ResponseEntity.ok(
+            "<html><body style='font-family:Arial;text-align:center;padding:60px'>" +
+            "<h2 style='color:#1a73e8'>✅ ¡Cuenta verificada!</h2>" +
+            "<p>Tu cuenta ha sido activada. Ya puedes <a href='http://localhost:4200/auth'>iniciar sesión</a>.</p>" +
+            "</body></html>"
+        );
+        case "YA_VERIFICADO" -> ResponseEntity.ok(
+            "<html><body style='font-family:Arial;text-align:center;padding:60px'>" +
+            "<h2 style='color:#f59e0b'>⚠️ Ya verificado</h2>" +
+            "<p>Esta cuenta ya fue verificada anteriormente. <a href='http://localhost:4200/auth'>Inicia sesión</a>.</p>" +
+            "</body></html>"
+        );
+        default -> ResponseEntity.badRequest().body(
+            "<html><body style='font-family:Arial;text-align:center;padding:60px'>" +
+            "<h2 style='color:#ef4444'>❌ Link inválido</h2>" +
+            "<p>El enlace de verificación no es válido o ya expiró.</p>" +
+            "</body></html>"
+        );
+    };
+}
     
     @PostMapping("/add")
-    public ResponseEntity<Map<String, Object>> addLogin(@RequestBody PersonaEntity login) throws Exception {
-        Map<String, Object> response = new HashMap<>();
-        
-        if (login.getEmail() != null && !login.getEmail().isEmpty()) {
-            login.setPassword(passwordEncoder.encode(login.getPassword()));
-            personaService.save(login);
-            response.put("estado", true);
-            return ResponseEntity.ok(response);
-        } else {
+public ResponseEntity<Map<String, Object>> addLogin(@RequestBody PersonaEntity login) throws Exception {
+
+    Map<String, Object> response = new HashMap<>();
+
+    // Validar que el correo venga lleno
+    if (login.getEmail() != null && !login.getEmail().isEmpty()) {
+
+        // ✅ Verificar si el correo ya existe
+        Optional<PersonaEntity> existente = personaService.findByCorreo(login.getEmail());
+
+        if (existente.isPresent()) {
             response.put("estado", false);
-            return ResponseEntity.badRequest().body(response);
+            response.put("mensaje", "El correo ya está registrado");
+
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(response);
         }
+
+        // Encriptar contraseña
+        login.setPassword(passwordEncoder.encode(login.getPassword()));
+
+        // Fechas
+        login.setCreated_at(LocalDateTime.now());
+        login.setUpdated_at(LocalDateTime.now());
+        login.setLast_login(LocalDateTime.now());
+
+        // Valores por defecto
+        if (login.getLocate() == null || login.getLocate().isEmpty()) {
+            login.setLocate("N/A");
+        }
+
+        if (login.getRole() == null || login.getRole().isEmpty()) {
+            login.setRole("user");
+        }
+
+        // Guardar usuario
+        personaService.save(login);
+
+        response.put("estado", true);
+        response.put("mensaje", "Usuario registrado con éxito");
+
+        return ResponseEntity.ok(response);
+
+    } else {
+
+        response.put("estado", false);
+        response.put("mensaje", "El correo es obligatorio");
+
+        return ResponseEntity.badRequest().body(response);
     }
+}
+
     @PutMapping("/a/{id}")
     public ResponseEntity<Map<String, String>> update(@PathVariable int id, @RequestBody PersonaEntity login) {
         try {
             login.setPassword(passwordEncoder.encode(login.getPassword()));
+            login.setUpdated_at(LocalDateTime.now());
             personaService.update(id, login);
             
-            // Devuelve un objeto JSON con un mensaje de éxito
             Map<String, String> response = new HashMap<>();
             response.put("status", "success");
             response.put("message", "Perfil actualizado con éxito");
 
             return new ResponseEntity<>(response, HttpStatus.OK);
         } catch (Exception e) {
-            // Devuelve un objeto JSON con un mensaje de error
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("status", "error");
             errorResponse.put("message", "No se encontró el recurso");
@@ -142,7 +207,6 @@ public class PersonaController {
             return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
         }
     }
-
 
     @DeleteMapping("/d/{id}")
     public ResponseEntity<String> delete(@PathVariable("id") int id) {

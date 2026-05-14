@@ -37,6 +37,19 @@
                         [expanded]="data.expanded"></app-sublevel-menu>
                 </div>
             </li>
+            
+
+            <!-- Botón cerrar sesión -->
+            <li class="sidenav-nav-item">
+                <a class="sidenav-nav-link" (click)="logout()" style="cursor: pointer;">
+                    <i class="sidenav-link-icon bi bi-box-arrow-left"></i>
+                    <!-- ✅ Se muestra siempre, no solo cuando collapsed=true -->
+                    <span class="sidenav-link-text" @fadeInOut>
+                        Cerrar sesión
+                    </span>
+                </a>
+            </li>
+
         </ul>
     </div>
 </div>

@@ -9,7 +9,7 @@ interface Espacio {
   relativeName: string;
   isOccupied: boolean;
   isReserved: boolean;
-  tipoVehiculo: String;
+  tipoVehiculo: string;
 }
 
 interface Vehiculo {
@@ -27,15 +27,19 @@ interface Vehiculo {
   styleUrls: ['./parking-details.component.css']
 })
 export class ParkingComponent implements OnInit {
+
   espacios: Espacio[] = [];
   vehiculos: Vehiculo[] = [];
+
   mostrarModal: boolean = false;
+
   espacioSeleccionado?: Espacio;
   vehiculoSeleccionado?: number;
+
   fechaReserva?: string;
   fechaSalida?: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) {}
 
   ngOnInit(): void {
     this.cargarEspacios();
@@ -54,32 +58,43 @@ export class ParkingComponent implements OnInit {
   }
 
   cargarEspacios(): void {
-    this.http.get<Espacio[]>('http://localhost:9000/api/space/all', { headers: this.crearHeaders() })
-      .subscribe(data => {
-        this.espacios = data;
-      });
+    this.http.get<Espacio[]>(
+      'http://localhost:9000/api/space/all',
+      { headers: this.crearHeaders() }
+    ).subscribe(data => {
+      this.espacios = data;
+    });
   }
 
   cargarVehiculos(): void {
-    const userId = localStorage.getItem("userId");
+    const userId = localStorage.getItem('userId'); // ← clave correcta
 
-    this.http.get<any[]>(`http://localhost:9000/api/vehiculo/persona/${userId}`, { headers: this.crearHeaders() })
-      .subscribe(data => {
-        this.vehiculos = data.map(item => ({
-          id: item[0],           // El primer valor del array: id
-          placa: item[2],        // El segundo valor del array: placa
-          tipoVehiculo: item[1], // El tercer valor del array: tipo de vehículo
-          propietario: item[3]   // El cuarto valor del array: propietario
-        }));
-      });
+    if (!userId) {
+      console.error('No hay usuario logueado');
+      return;
+    }
+
+    this.http.get<any[]>(
+      `http://localhost:9000/api/vehiculo/persona/${userId}`,
+      { headers: this.crearHeaders() }
+    ).subscribe(data => {
+      this.vehiculos = data.map(item => ({
+        id: item[0],
+        tipoVehiculo: item[1],
+        placa: item[2],
+        propietario: item[3]
+      }));
+    }, error => {
+      console.error('Error cargando vehículos:', error);
+    });
   }
 
   espaciosPorTipo(tipo: string): Espacio[] {
-    return this.espacios.filter(espacio => espacio.tipoVehiculo === tipo);
+    return this.espacios.filter(e => e.tipoVehiculo === tipo);
   }
 
   abrirModal(espacio: Espacio): void {
-    if (!espacio.isOccupied) {
+    if (!espacio.isOccupied && !espacio.isReserved) {
       this.espacioSeleccionado = espacio;
       this.mostrarModal = true;
     }
@@ -94,38 +109,67 @@ export class ParkingComponent implements OnInit {
   }
 
   reservarEspacio(): void {
-    if (this.espacioSeleccionado && this.vehiculoSeleccionado && this.fechaReserva && this.fechaSalida) {
+
+    // Validación: salida debe ser posterior a entrada
+    if (this.fechaReserva && this.fechaSalida &&
+        new Date(this.fechaSalida) <= new Date(this.fechaReserva)) {
+      Swal.fire({
+        title: 'Fechas inválidas',
+        text: 'La hora de salida debe ser posterior a la hora de entrada.',
+        icon: 'warning',
+        confirmButtonText: 'Entendido'
+      });
+      return;
+    }
+
+    if (
+      this.espacioSeleccionado &&
+      this.vehiculoSeleccionado &&
+      this.fechaReserva &&
+      this.fechaSalida
+    ) {
       const reserva = {
-        space: { id: this.espacioSeleccionado.id },
-        vehiculo: {
-          id: this.vehiculoSeleccionado
-        },
+        space:    { id: this.espacioSeleccionado.id },
+        vehiculo: { id: this.vehiculoSeleccionado },
         fechaReserva: this.fechaReserva,
-        fechaSalida: this.fechaSalida
+        fechaSalida:  this.fechaSalida
       };
-      this.http.post('http://localhost:9000/api/reserva/add', reserva, { headers: this.crearHeaders() })
-        .subscribe(() => {
-          this.actualizarIsReserved(this.espacioSeleccionado!.id, true);
-          Swal.fire({
-            title: 'Reserva realizada con éxito',
-            icon: 'success',
-            confirmButtonText: 'Aceptar'
-          });
-          this.cargarEspacios(); // Recargar espacios después de la reserva
-          this.cerrarModal();
+
+      this.http.post(
+        'http://localhost:9000/api/reserva/add',
+        reserva,
+        { headers: this.crearHeaders() }
+      ).subscribe(() => {
+
+        this.actualizarIsReserved(this.espacioSeleccionado!.id, true);
+
+        Swal.fire({
+          title: '¡Reserva realizada con éxito!',
+          icon: 'success',
+          confirmButtonText: 'Aceptar'
         });
+
+        this.cargarEspacios();
+        this.cerrarModal();
+      }, () => {
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo completar la reserva. Intenta de nuevo.',
+          icon: 'error',
+          confirmButtonText: 'Aceptar'
+        });
+      });
     }
   }
 
-  // Método para actualizar solo el campo isReserved
   actualizarIsReserved(id: number, isReserved: boolean): void {
-    this.http.patch(`http://localhost:9000/api/space/update/reserved/${id}`, { isReserved }, { headers: this.crearHeaders() })
-      .subscribe(
-        () => {
-          console.log('Campo isReserved actualizado con éxito');
-          this.cargarEspacios(); // Recargar espacios después de actualizar isReserved
-        },
-        error => console.error('Error al actualizar el campo isReserved:', error)
-      );
+    this.http.patch(
+      `http://localhost:9000/api/space/update/reserved/${id}`,
+      { isReserved },
+      { headers: this.crearHeaders() }
+    ).subscribe(
+      () => this.cargarEspacios(),
+      error => console.error('Error al actualizar isReserved:', error)
+    );
   }
 }

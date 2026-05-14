@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { fadeInOut, INavbarData } from './helper';
 import { navbarData } from './nav-data';
 import { SublevelMenuComponent } from './sublevel-menu.component';
+import { AuthService } from '../../services/auth.service';
 
 interface SideNavToggle {
   screenWidth: number;
@@ -22,7 +23,7 @@ export class SidenavComponent implements OnInit {
   @Output() onToggleSideNav: EventEmitter<SideNavToggle> = new EventEmitter();
   collapsed = false;
   screenWidth = 0;
-  navData = navbarData;
+  navData: INavbarData[] = [];
   multiple: boolean = false;
 
   @HostListener('window:resize', ['$event'])
@@ -34,10 +35,24 @@ export class SidenavComponent implements OnInit {
     }
   }
 
-  constructor(public router: Router) { }
+  constructor(public router: Router, private authService: AuthService) { }
 
   ngOnInit(): void {
     this.screenWidth = window.innerWidth;
+    this.loadNavData();
+  }
+
+  loadNavData(): void {
+    const isAdmin = this.authService.isAdmin();
+    // Rutas exclusivas de admin
+    const adminOnlyRoutes = ['Admin', 'admin/facturacion'];
+
+    if (isAdmin) {
+      this.navData = navbarData;
+    } else {
+      // Filtrar items que son solo para admin
+      this.navData = navbarData.filter(item => !adminOnlyRoutes.includes(item.routeLink));
+    }
   }
 
   toggleCollapse(): void {
@@ -72,31 +87,8 @@ export class SidenavComponent implements OnInit {
     }
   }
 
-  getCityName() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-
-        // Usar una API de geocodificación inversa (por ejemplo, OpenCage o Google Maps)
-        const apiKey = ''; // Reemplaza con tu clave API
-        const url = `https://api.opencagedata.com/geocode/v1/json?q=${latitude}+${longitude}&key=${apiKey}`;
-
-        fetch(url)
-          .then(response => response.json())
-          .then(data => {
-            const city = data.results[0]?.components.city || 'Ciudad no encontrada';
-            console.log('Ciudad:', city);
-          })
-          .catch(error => {
-            console.error('Error al obtener la ciudad:', error);
-          });
-      }, (error) => {
-        console.error('Error de geolocalización:', error);
-      });
-    } else {
-      console.error('Geolocalización no es soportada por este navegador');
-    }
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/home'], { replaceUrl: true });
   }
-
 }

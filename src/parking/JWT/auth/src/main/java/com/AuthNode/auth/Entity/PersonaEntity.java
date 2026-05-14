@@ -38,7 +38,7 @@ public class PersonaEntity {
     @Column(name = "role", nullable = false, length = 11)
     private String role;
 
-    @Column(name = "locate", nullable = false, length = 20)
+    @Column(name = "locate", nullable = true, length = 20)
     private String locate;
 
     @Column(name = "last_login", nullable = true)
@@ -52,119 +52,67 @@ public class PersonaEntity {
 
     @Column(name = "status", nullable = false)
     private boolean status;
-    
+
     @Column(name = "notifications", nullable = false)
     private boolean notifications;
+
+
+    @Column(name = "verification_token", nullable = true, length = 100)
+    private String verificationToken;
+
+    @Column(name = "email_verified", nullable = false)
+    private boolean emailVerified = false;
+
+    // ── RELACIONES ──────────────────────────────────────────────
 
     @OneToMany(mappedBy = "persona", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<VehiculoEntity> vehiculos;
 
-    
-    // Setters and Getters
+    // ── GETTERS Y SETTERS ───────────────────────────────────────
 
-    public Integer getId() {
-        return id;
-    }
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
-    public void setId(Integer id) {
-        this.id = id;
-    }
+    public String getPhoto() { return photo; }
+    public void setPhoto(String photo) { this.photo = photo; }
 
-    public String getPhoto() {
-        return photo;
-    }
+    public String getFullname() { return fullname; }
+    public void setFullname(String fullname) { this.fullname = fullname; }
 
-    public void setPhoto(String photo) {
-        this.photo = photo;
-    }
+    public String getPassword() { return password; }
+    public void setPassword(String password) { this.password = password; }
 
-    public String getFullname() {
-        return fullname;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setFullname(String fullname) {
-        this.fullname = fullname;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public String getPassword() {
-        return password;
-    }
+    public String getLocate() { return locate; }
+    public void setLocate(String locate) { this.locate = locate; }
 
-    public void setPassword(String password) {
-        this.password = password;
-    }
+    public LocalDateTime getLast_login() { return last_login; }
+    public void setLast_login(LocalDateTime last_login) { this.last_login = last_login; }
 
-    public String getEmail() {
-        return email;
-    }
+    public LocalDateTime getCreated_at() { return created_at; }
+    public void setCreated_at(LocalDateTime created_at) { this.created_at = created_at; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    public LocalDateTime getUpdated_at() { return updated_at; }
+    public void setUpdated_at(LocalDateTime updated_at) { this.updated_at = updated_at; }
 
-    public String getRole() {
-        return role;
-    }
+    public boolean getStatus() { return status; }
+    public void setStatus(boolean status) { this.status = status; }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public boolean getNotifications() { return notifications; }
+    public void setNotifications(boolean notifications) { this.notifications = notifications; }
 
-    public String getLocate() {
-        return locate;
-    }
+    public String getVerificationToken() { return verificationToken; }
+    public void setVerificationToken(String verificationToken) { this.verificationToken = verificationToken; }
 
-    public void setLocate(String locate) {
-        this.locate = locate;
-    }
+    public boolean isEmailVerified() { return emailVerified; }
+    public void setEmailVerified(boolean emailVerified) { this.emailVerified = emailVerified; }
 
-    public LocalDateTime getLast_login() {
-        return last_login;
-    }
-
-    public void setLast_login(LocalDateTime last_login) {
-        this.last_login = last_login;
-    }
-
-    public LocalDateTime getCreated_at() {
-        return created_at;
-    }
-
-    public void setCreated_at(LocalDateTime created_at) {
-        this.created_at = created_at;
-    }
-
-    public LocalDateTime getUpdated_at() {
-        return updated_at;
-    }
-
-    public void setUpdated_at(LocalDateTime updated_at) {
-        this.updated_at = updated_at;
-    }
-
-    public boolean getStatus() {
-        return status;
-    }
-
-    public void setStatus(boolean status) {
-        this.status = status;
-    }
-    
-    public boolean getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(boolean notifications) {
-        this.notifications = notifications;
-    }
-    
-    public List<VehiculoEntity> getVehiculos() {
-        return vehiculos;
-    }
-
-    public void setVehiculos(List<VehiculoEntity> vehiculos) {
-        this.vehiculos = vehiculos;
-    }
-    
+    public List<VehiculoEntity> getVehiculos() { return vehiculos; }
+    public void setVehiculos(List<VehiculoEntity> vehiculos) { this.vehiculos = vehiculos; }
 }

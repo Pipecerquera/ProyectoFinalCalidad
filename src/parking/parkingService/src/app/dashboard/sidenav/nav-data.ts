@@ -28,7 +28,7 @@ export const navbarData: INavbarData[] = [
   },
   {
     routeLink: 'Admin',
-    icon: 'bi bi-person-lock',  
+    icon: 'bi bi-person-lock',
     label: 'Gestiónes administrativas',
     items: [
       {
@@ -37,7 +37,7 @@ export const navbarData: INavbarData[] = [
       },
       {
         routeLink: 'admin/vehiculos',
-        label: 'Vehiculos registrados',
+        label: 'Registro de vehiculos',
       },
       {
         routeLink: 'admin/spaces',
@@ -46,10 +46,8 @@ export const navbarData: INavbarData[] = [
     ],
   },
   {
-    routeLink: 'paypal',
-    icon: 'bi bi-paypal',
-    label: 'Pagos'
+    routeLink: 'admin/facturacion',
+    icon: 'bi bi-receipt',
+    label: 'Facturación'
   },
 ];
-
-

@@ -33,7 +33,7 @@ public class ReservaService implements IReservaService {
     }
 
     @Override
-    public ReservaEntity save(ReservaEntity reserva) {    
+    public ReservaEntity save(ReservaEntity reserva) {
         return reservaRepository.save(reserva);
     }
 
@@ -44,30 +44,45 @@ public class ReservaService implements IReservaService {
 
     @Override
     public void update(int id, ReservaEntity reserva) throws Exception {
+
         ReservaEntity existingReserva = reservaRepository.findById(id)
-            .orElseThrow(() -> new Exception("No se encontró la reserva con el ID proporcionado"));
+            .orElseThrow(() ->
+                new Exception("No se encontró la reserva con el ID proporcionado"));
 
         existingReserva.setSpace(reserva.getSpace());
         existingReserva.setFechaReserva(reserva.getFechaReserva());
+        existingReserva.setFechaSalida(reserva.getFechaSalida());
         existingReserva.setVehiculo(reserva.getVehiculo());
+
         reservaRepository.save(existingReserva);
+    }
+
+    @Override
+    public List<ReservaEntity> findByPersonaId(Integer personaId) throws Exception {
+        return reservaRepository.findByPersonaId(personaId);
     }
 
     // Método para actualizar solo el campo isReserved
     public ReservaEntity updateIsReserved(int id, boolean isReserved) throws Exception {
+
         ReservaEntity existingReserva = reservaRepository.findById(id)
-            .orElseThrow(() -> new Exception("No se encontró la reserva con el ID proporcionado"));
+            .orElseThrow(() ->
+                new Exception("No se encontró la reserva con el ID proporcionado"));
 
         existingReserva.getSpace().setReserved(isReserved);
+
         return reservaRepository.save(existingReserva);
     }
 
     // Método para actualizar solo el campo isOccupied
     public ReservaEntity updateIsOccupied(int id, boolean isOccupied) throws Exception {
+
         ReservaEntity existingReserva = reservaRepository.findById(id)
-            .orElseThrow(() -> new Exception("No se encontró la reserva con el ID proporcionado"));
+            .orElseThrow(() ->
+                new Exception("No se encontró la reserva con el ID proporcionado"));
 
         existingReserva.getSpace().setOccupied(isOccupied);
+
         return reservaRepository.save(existingReserva);
     }
 

@@ -1,7 +1,0 @@
-@startuml
-package "Sistema de Parqueadero" {
-    [Interfaz Usuario] --> [Gestor de Tickets]
-    [Gestor de Tickets] --> [Base de Datos]
-    [Gestor de Tickets] --> [Módulo de Facturación]
-}
-@enduml

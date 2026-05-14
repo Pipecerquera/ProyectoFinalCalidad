@@ -12,6 +12,7 @@ import Swal from 'sweetalert2';
   styleUrls: ['./user-profile.component.css']
 })
 export class UserProfileComponent implements OnInit {
+
   photo: string | null = null;
   fullName: string = 'unknownuser';
   email: string = 'unknownuser@gmail.com';
@@ -29,17 +30,31 @@ export class UserProfileComponent implements OnInit {
     this.loadUserReservations();
   }
 
-  loadUserProfile() {
-    const userId = localStorage.getItem('userId');
+  crearHeaders(): HttpHeaders {
     const token = localStorage.getItem('token');
-    if (userId && token) {
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`
-      });
 
-      this.http.get<any>(`http://localhost:9000/api/auth/${userId}`, { headers }).subscribe(
+    return new HttpHeaders({
+      'Authorization': `Bearer ${token}`
+    });
+  }
+
+  loadUserProfile() {
+
+    const userId = localStorage.getItem('userId');
+
+    if (userId) {
+
+      this.http.get<any>(
+        `http://localhost:9000/api/auth/${userId}`,
+        { headers: this.crearHeaders() }
+      ).subscribe(
+
         (data) => {
-          this.photo = this.isValidBase64(data.photo) ? data.photo : null;
+
+          this.photo = this.isValidBase64(data.photo)
+            ? data.photo
+            : null;
+
           this.fullName = data.fullname;
           this.email = data.email;
           this.role = data.role;
@@ -47,9 +62,16 @@ export class UserProfileComponent implements OnInit {
           this.password = data.password;
           this.notifications = data.notifications;
         },
+
         (error) => {
-          Swal.fire('Error', 'Error al cargar los datos del usuario', 'error');
-          console.error('Error al cargar los datos del usuario:', error);
+
+          Swal.fire(
+            'Error',
+            'Error al cargar los datos del usuario',
+            'error'
+          );
+
+          console.error(error);
         }
       );
     }
@@ -63,22 +85,34 @@ export class UserProfileComponent implements OnInit {
     this.isModalOpen = false;
   }
 
-  // Cargar reservas
+  // ✅ SOLO RESERVAS DEL USUARIO LOGUEADO
   loadUserReservations() {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`
-      });
 
-      this.http.get<any[]>('http://localhost:9000/api/reserva/all', { headers }).subscribe(
+    const userId = localStorage.getItem('userId');
+
+    if (userId) {
+
+      this.http.get<any[]>(
+        `http://localhost:9000/api/reserva/persona/${userId}`,
+        { headers: this.crearHeaders() }
+      ).subscribe(
+
         (data) => {
+
           this.reservations = data;
-          console.log(this.reservations)
+
+          console.log('Reservas usuario:', this.reservations);
         },
+
         (error) => {
-          Swal.fire('Error', 'Error al cargar las reservas', 'error');
-          console.error('Error al cargar las reservas:', error);
+
+          Swal.fire(
+            'Error',
+            'Error al cargar las reservas',
+            'error'
+          );
+
+          console.error(error);
         }
       );
     }
@@ -86,56 +120,86 @@ export class UserProfileComponent implements OnInit {
 
   // Convertir imagen a Base64
   convertPhotoToBase64(event: Event) {
+
     const file = (event.target as HTMLInputElement).files?.[0];
+
     if (file) {
+
       const reader = new FileReader();
+
       reader.onload = () => {
+
         const base64String = reader.result as string;
+
         if (this.isValidBase64(base64String)) {
           this.photo = base64String;
         } else {
           this.photo = null;
         }
       };
+
       reader.readAsDataURL(file);
     }
   }
 
   isValidBase64(base64String: string): boolean {
+
     const regex = /^data:image\/[a-zA-Z]+;base64,[A-Za-z0-9+/=]+$/;
+
     return regex.test(base64String);
   }
 
-  // Guardar cambios del perfil
+  // Guardar cambios
   saveProfile() {
+
     const userId = localStorage.getItem('userId');
-    const token = localStorage.getItem('token');
-    if (userId && token) {
-      const headers = new HttpHeaders({
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      });
+
+    if (userId) {
 
       const updatedProfile = {
+
         fullname: this.fullName,
         email: this.email,
         password: this.password,
         role: this.role,
-        location: this.location,
+        locate: this.location,
         notifications: this.notifications,
         photo: this.photo
       };
 
-      this.http.put<any>(`http://localhost:9000/api/auth/a/${userId}`, updatedProfile, { headers }).subscribe(
+      this.http.put<any>(
+        `http://localhost:9000/api/auth/a/${userId}`,
+        updatedProfile,
+        { headers: this.crearHeaders() }
+      ).subscribe(
+
         (response) => {
+
           if (response.status === "success") {
-            Swal.fire('Éxito', 'Perfil actualizado con éxito', 'success');
+
+            Swal.fire(
+              'Éxito',
+              'Perfil actualizado con éxito',
+              'success'
+            );
+
           } else {
-            Swal.fire('Error', 'Error al actualizar el perfil', 'error');
+
+            Swal.fire(
+              'Error',
+              'Error al actualizar el perfil',
+              'error'
+            );
           }
         },
+
         (error) => {
-          Swal.fire('Error', 'Error al actualizar el perfil', 'error');
+
+          Swal.fire(
+            'Error',
+            'Error al actualizar el perfil',
+            'error'
+          );
         }
       );
     }

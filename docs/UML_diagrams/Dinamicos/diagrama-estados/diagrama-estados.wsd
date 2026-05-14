@@ -1,5 +1,0 @@
-@startuml
-[*] --> Disponible
-Disponible --> Ocupado
-Ocupado --> Disponible : Liberar espacio
-@enduml

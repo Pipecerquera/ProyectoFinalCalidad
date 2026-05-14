@@ -1,8 +1,0 @@
-@startuml
-actor Cliente
-Cliente -> Servidor: Solicitar Ticket
-Servidor -> BaseDeDatos: Consultar disponibilidad
-BaseDeDatos -> Servidor: Respuesta
-Servidor -> Cliente: Emitir Ticket
-@enduml
-

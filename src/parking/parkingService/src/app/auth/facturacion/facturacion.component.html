@@ -1,0 +1,178 @@
+<div class="facturacion-container">
+
+  <!-- Encabezado -->
+  <div class="page-header">
+    <div>
+      <h1><i class="bi bi-receipt"></i> Facturación</h1>
+      <p>Registro de cobros por tiempo de parqueo</p>
+    </div>
+    <button class="btn-refresh" (click)="cargarFacturas()">
+      <i class="bi bi-arrow-clockwise"></i> Actualizar
+    </button>
+  </div>
+
+  <!-- Tarjetas de resumen -->
+  <div class="stats-grid">
+    <div class="stat-card green">
+      <div class="stat-icon"><i class="bi bi-cash-stack"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Total recaudado</span>
+        <span class="stat-value">{{ formatCOP(totalRecaudado) }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card blue">
+      <div class="stat-icon"><i class="bi bi-file-earmark-text"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Total facturas</span>
+        <span class="stat-value">{{ totalFacturas }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card purple">
+      <div class="stat-icon"><i class="bi bi-clock-history"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Promedio horas</span>
+        <span class="stat-value">{{ promedioHoras }}h</span>
+      </div>
+    </div>
+
+    <div class="stat-card orange">
+      <div class="stat-icon"><i class="bi bi-currency-dollar"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Tarifa por hora</span>
+        <span class="stat-value">{{ formatCOP(2000) }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buscador -->
+  <div class="search-bar">
+    <i class="bi bi-search"></i>
+    <input
+      type="text"
+      [(ngModel)]="busqueda"
+      (input)="filtrar()"
+      placeholder="Buscar por placa, propietario o espacio...">
+  </div>
+
+  <!-- Estado de carga -->
+  <div class="loading" *ngIf="cargando">
+    <i class="bi bi-hourglass-split"></i>
+    Cargando facturas...
+  </div>
+
+  <div class="error-msg" *ngIf="error">
+    <i class="bi bi-exclamation-triangle"></i>
+    {{ error }}
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-wrapper" *ngIf="!cargando && !error">
+
+    <table *ngIf="facturasFiltradas.length > 0">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Placa</th>
+          <th>Tipo</th>
+          <th>Propietario</th>
+          <th>Espacio</th>
+          <th>Entrada</th>
+          <th>Salida</th>
+          <th>Horas</th>
+          <th>Total</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        <tr *ngFor="let f of facturasFiltradas">
+          <td>{{ f.id }}</td>
+          <td><span class="badge-placa">{{ f.placa }}</span></td>
+          <td>{{ f.tipoVehiculo }}</td>
+          <td>{{ f.propietario }}</td>
+          <td><span class="badge-espacio">{{ f.espacio }}</span></td>
+          <td>{{ f.fechaEntrada | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td>{{ f.fechaSalida | date:'dd/MM/yyyy HH:mm' }}</td>
+          <td><span class="badge-horas">{{ f.horas }}h</span></td>
+          <td><strong class="precio">{{ formatCOP(f.total) }}</strong></td>
+          <td>
+            <button class="btn-factura" (click)="abrirFactura(f)">
+              <i class="bi bi-receipt-cutoff"></i>
+              Factura
+            </button>
+          </td>
+        </tr>
+      </tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="8" class="total-label">TOTAL RECAUDADO</td>
+          <td><strong class="precio total-final">{{ formatCOP(totalRecaudado) }}</strong></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <!-- Sin resultados -->
+    <div class="empty-state" *ngIf="facturasFiltradas.length === 0">
+      <i class="bi bi-inbox"></i>
+      <p>No hay facturas registradas aún.</p>
+      <small>Las facturas aparecen cuando una reserva tiene fecha de entrada y salida.</small>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL FACTURA -->
+<div class="modal-factura" *ngIf="facturaSeleccionada">
+
+  <div class="factura-box" id="facturaPDF">
+
+    <div class="factura-header">
+      <h2>ParkingService</h2>
+      <p>Factura de Parqueadero</p>
+    </div>
+
+    <hr>
+
+    <div class="factura-info">
+      <p><strong>Factura #:</strong> {{ facturaSeleccionada.id }}</p>
+      <p><strong>Placa:</strong> {{ facturaSeleccionada.placa }}</p>
+      <p><strong>Propietario:</strong> {{ facturaSeleccionada.propietario }}</p>
+      <p><strong>Vehículo:</strong> {{ facturaSeleccionada.tipoVehiculo }}</p>
+      <p><strong>Espacio:</strong> {{ facturaSeleccionada.espacio }}</p>
+      <p><strong>Entrada:</strong> {{ facturaSeleccionada.fechaEntrada | date:'dd/MM/yyyy HH:mm' }}</p>
+      <p><strong>Salida:</strong> {{ facturaSeleccionada.fechaSalida | date:'dd/MM/yyyy HH:mm' }}</p>
+      <p><strong>Horas:</strong> {{ facturaSeleccionada.horas }}h</p>
+      <p><strong>Tarifa:</strong> {{ formatCOP(facturaSeleccionada.tarifa) }}</p>
+    </div>
+
+    <hr>
+
+    <div class="factura-total">
+      TOTAL: {{ formatCOP(facturaSeleccionada.total) }}
+    </div>
+
+    <div class="factura-footer">
+      Gracias por usar ParkingService
+    </div>
+
+    <div class="factura-buttons">
+
+      <button class="btn-descargar" (click)="descargarPDF()">
+        <i class="bi bi-download"></i>
+        Descargar PDF
+      </button>
+
+      <!-- Al confirmar: elimina la reserva de BD y cierra el modal -->
+      <button class="btn-cerrar" (click)="cerrarFactura()" [disabled]="eliminando">
+        <i class="bi bi-check-circle"></i>
+        {{ eliminando ? 'Procesando...' : 'Confirmar y cerrar' }}
+      </button>
+
+    </div>
+
+  </div>
+</div>
